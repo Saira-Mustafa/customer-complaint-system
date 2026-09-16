@@ -9,6 +9,8 @@ from app.schemas.complaint import (
     DocumentComplaintResponse,
     DocumentComplaintResult,
     InitialRiskAssessment,
+    LedgerSaveRequest,
+    LedgerSaveResponse,
 )
 
 __all__ = [
@@ -22,4 +24,6 @@ __all__ = [
     "DocumentComplaintResponse",
     "DocumentComplaintResult",
     "InitialRiskAssessment",
+    "LedgerSaveRequest",
+    "LedgerSaveResponse",
 ]

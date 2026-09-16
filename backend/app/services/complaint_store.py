@@ -48,6 +48,7 @@ def create_complaint_from_extracted(data: dict[str, Any]) -> Complaint:
         ),
         initial_severity=data.get("initial_severity"),
         priority=data.get("priority"),
+        recommended_next_action=data.get("recommended_next_action"),
     )
     return create_complaint(create_data)
 

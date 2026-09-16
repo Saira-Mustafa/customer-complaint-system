@@ -30,6 +30,7 @@ class ComplaintBase(BaseModel):
     # Initial Assessment (often set after first review)
     initial_severity: Optional[str] = None
     priority: Optional[str] = None
+    recommended_next_action: Optional[str] = None
 
 
 class ComplaintCreate(ComplaintBase):
@@ -58,6 +59,7 @@ class ComplaintExtraction(BaseModel):
     detailed_complaint_description: Optional[str] = None
     initial_severity: Optional[str] = None
     priority: Optional[str] = None
+    recommended_next_action: Optional[str] = None
 
 
 class ComplaintUpdate(ComplaintExtraction):
@@ -148,3 +150,17 @@ class DocumentComplaintResponse(BaseModel):
     filename: Optional[str] = None
     extracted_text: Optional[str] = None
     extracted_complaint: Optional[ComplaintExtraction] = None
+
+
+class LedgerSaveRequest(BaseModel):
+    """Optional body when saving a working complaint to the QMS ledger."""
+
+    recommended_next_action: Optional[str] = None
+
+
+class LedgerSaveResponse(BaseModel):
+    """Response from POST /complaints/{complaint_id}/ledger."""
+
+    complaint: Complaint
+    ledger_status: str
+    message: str

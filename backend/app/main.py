@@ -2,10 +2,13 @@
 
 from uuid import UUID
 
-from fastapi import FastAPI, File, HTTPException, UploadFile
+from fastapi import Depends, FastAPI, File, HTTPException, UploadFile
+from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy.orm import Session
 
 from app.ai.complaint_agent import run_complaint_agent
 from app.ai.document_extractor import run_document_complaint_pipeline
+from app.db.session import get_db
 from app.schemas.complaint import (
     AIComplaintRequest,
     AIComplaintResponse,
@@ -13,14 +16,33 @@ from app.schemas.complaint import (
     ComplaintCreate,
     ComplaintUpdate,
     DocumentComplaintResponse,
+    LedgerSaveRequest,
+    LedgerSaveResponse,
 )
 from app.services import complaint_store
+from app.services.ledger_service import (
+    get_ledger_complaint,
+    list_ledger_complaints,
+    save_complaint_to_ledger,
+)
 from app.services.pdf_extractor import PdfExtractionError, extract_text_from_pdf
 
 app = FastAPI(
     title="Customer Complaint System",
     description="AI-powered Customer Complaint Management System for pharmaceutical manufacturing.",
     version="0.1.0",
+)
+
+# Allow the Vite frontend during local development
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 
@@ -35,9 +57,21 @@ def health_check():
 
 
 @app.get("/complaints", response_model=list[Complaint])
-def list_complaints():
-    """Return all stored complaints (empty list until some are created)."""
-    return complaint_store.list_complaints()
+def list_complaints(db: Session = Depends(get_db)):
+    """Return complaints saved to the QMS ledger (PostgreSQL)."""
+    return list_ledger_complaints(db)
+
+
+@app.get("/complaints/{complaint_id}", response_model=Complaint)
+def get_complaint(complaint_id: UUID, db: Session = Depends(get_db)):
+    """Return one ledger complaint, falling back to the in-memory working copy."""
+    saved = get_ledger_complaint(db, complaint_id)
+    if saved is not None:
+        return saved
+    working = complaint_store.get_complaint(complaint_id)
+    if working is None:
+        raise HTTPException(status_code=404, detail="Complaint not found")
+    return working
 
 
 @app.post("/complaints", response_model=Complaint)
@@ -53,6 +87,28 @@ def update_complaint(complaint_id: UUID, updates: ComplaintUpdate):
         return complaint_store.update_complaint(complaint_id, updates)
     except KeyError:
         raise HTTPException(status_code=404, detail="Complaint not found") from None
+
+
+@app.post("/complaints/{complaint_id}/ledger", response_model=LedgerSaveResponse)
+def save_to_qms_ledger(
+    complaint_id: UUID,
+    body: LedgerSaveRequest | None = None,
+    db: Session = Depends(get_db),
+):
+    """Persist the current working complaint into the PostgreSQL QMS ledger."""
+    try:
+        return save_complaint_to_ledger(
+            db,
+            complaint_id,
+            recommended_next_action=(body.recommended_next_action if body else None),
+        )
+    except KeyError:
+        raise HTTPException(status_code=404, detail="Complaint not found") from None
+    except Exception as exc:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Unable to save complaint to QMS Ledger: {exc}",
+        ) from exc
 
 
 @app.post("/ai/complaint", response_model=AIComplaintResponse)

@@ -56,12 +56,13 @@ def generate_initial_risk_assessment(complaint: Complaint) -> InitialRiskAssessm
         "AI-recommended initial assessment (not a final pharmaceutical QA decision)"
     )
 
-    # Persist severity/priority onto the complaint record
+    # Persist severity/priority/next action onto the working complaint record
     complaint_store.update_complaint(
         complaint.id,
         ComplaintUpdate(
             initial_severity=assessment.initial_severity,
             priority=assessment.priority,
+            recommended_next_action=assessment.recommended_next_action,
         ),
     )
 
