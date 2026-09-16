@@ -30,7 +30,7 @@ cp .env.example .env
 Required variables:
 
 - `GROQ_API_KEY` — API key for Groq LLM access
-- `DATABASE_URL` — PostgreSQL connection string (e.g. `postgresql+psycopg://user:password@localhost:5432/complaints`)
+- `DATABASE_URL` — PostgreSQL connection string (e.g. `postgresql+psycopg://user:password@localhost:5432/customer-complaints`)
 
 ### 2. Frontend
 

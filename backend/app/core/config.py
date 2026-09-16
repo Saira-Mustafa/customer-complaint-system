@@ -17,7 +17,7 @@ class Settings(BaseSettings):
 
     groq_api_key: str | None = None
     database_url: str = (
-        "postgresql+psycopg://postgres:YOUR_POSTGRES_PASSWORD@localhost:5432/customer_complaints"
+        "postgresql+psycopg://postgres:YOUR_POSTGRES_PASSWORD@localhost:5432/customer-complaints"
     )
 
 

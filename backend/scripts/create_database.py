@@ -1,5 +1,6 @@
-"""One-time helper: create the customer_complaints database if missing.
+"""One-time helper: create the configured PostgreSQL database if missing.
 
+Reads DATABASE_URL from backend/.env (e.g. customer-complaints).
 Does not create tables — Alembic migrations handle schema.
 """
 
